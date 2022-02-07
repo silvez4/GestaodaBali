@@ -11,3 +11,20 @@ class BoloModel {
     this.qtd--;
   }
 }
+
+class VendaModel {
+  late String setor;
+  late String cliente;
+  late String vendedor;
+  late List<BoloModel> venda = [];
+  late String hora;
+
+  VendaModel(String setor, String cliente, String vendedor,
+      List<BoloModel> venda, String hora) {
+    this.setor = setor;
+    this.cliente = cliente;
+    this.vendedor = vendedor;
+    this.venda = venda;
+    this.hora = hora;
+  }
+}
