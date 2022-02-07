@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gestao_bali/net/google_signin.dart';
 import 'package:gestao_bali/views/home.dart';
-import 'package:gestao_bali/views/menu.dart';
 import 'package:provider/provider.dart';
 
 class OpeningView extends StatefulWidget {
@@ -14,30 +13,15 @@ class OpeningViewState extends State<OpeningView> {
   OpeningViewState();
 
   @override
-
-  //region Pegar displayName de sharedPreferences
-  // void initState() {
-  //   getData();
-  // }
-
-  // getData() async {
-  //   SharedPreferences prefs = await SharedPreferences.getInstance();
-  //   setState(() {
-  //     displayName = prefs.getString('displayName')!;
-  //   });
-  // }
-  //endregions
-
-  @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
-    const corFundoBtn = Colors.black87;
-    final corTextoBtn = Colors.orange[600];
+    final corFundoBtn = Colors.pinkAccent.withOpacity(0.3);
+    final corTextoBtn = Colors.black.withOpacity(0.5);
 
-    // final logo = Image.asset(
-    //   'images/logo-ledlux-corte.png',
-    //   height: mq.size.height / 3,
-    // );
+    final logo = Image.asset(
+      'resources/bdbali.png',
+      height: mq.size.height / 3,
+    );
 
     //region Opção Login com email e senha cadastrado no app
     // final loginBtn = Material(
@@ -138,7 +122,7 @@ class OpeningViewState extends State<OpeningView> {
     );
 
     return Scaffold(
-      backgroundColor: Colors.white12,
+      backgroundColor: Colors.white,
       body: StreamBuilder(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
@@ -159,11 +143,7 @@ class OpeningViewState extends State<OpeningView> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.only(top: 20),
-                    // child: logo,
-                    child: Icon(Icons.refresh),
-                  ),
+                  logo,
                   buttons,
                 ],
               ),

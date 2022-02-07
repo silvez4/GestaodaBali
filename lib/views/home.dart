@@ -2,6 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:gestao_bali/models/bolo_model.dart';
 import 'package:gestao_bali/net/firebase_connection.dart';
+import 'package:gestao_bali/net/google_signin.dart';
+import 'package:gestao_bali/theme/routes.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -10,14 +13,171 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
+//region Cores
+const corBtnMenuAppBar = Colors.black;
+const corBtnMenuAppBarlogout = Colors.red;
+final corBtn = ElevatedButton.styleFrom(
+  primary: Colors.pinkAccent,
+  onPrimary: Colors.white,
+);
+//endregion
+
+void _onSelect(BuildContext context, int item) {
+  switch (item) {
+    case 0:
+      Navigator.of(context).pushNamed(AppRoutes.home);
+      break;
+
+    case 1:
+      Navigator.of(context).pushNamed(AppRoutes.gestao);
+      break;
+
+    case 2:
+      final provider =
+          Provider.of<GoogleSignInProvider>(context, listen: false);
+      provider.logout();
+      break;
+  }
+}
+
+//region Opções do Menu no Appbar
+final opcoesMenu = [
+  PopupMenuItem<int>(
+    value: 0,
+    child: Row(
+      children: const [
+        Icon(
+          Icons.monetization_on,
+          color: corBtnMenuAppBar,
+        ),
+        Padding(
+          padding: EdgeInsets.only(left: 8.0),
+          child: Text(
+            'Vender',
+          ),
+        ),
+      ],
+    ),
+  ),
+  PopupMenuItem<int>(
+    value: 1,
+    child: Row(
+      children: const [
+        Icon(
+          Icons.wallet_travel,
+          color: corBtnMenuAppBar,
+        ),
+        Padding(
+          padding: EdgeInsets.only(left: 8.0),
+          child: Text('Gestão'),
+        ),
+      ],
+    ),
+  ),
+  PopupMenuItem<int>(
+    value: 2,
+    child: Row(
+      children: const [
+        Icon(
+          Icons.logout,
+          color: corBtnMenuAppBarlogout,
+        ),
+        Padding(
+          padding: EdgeInsets.only(left: 8.0),
+          child: Text(
+            'Sair',
+            style: TextStyle(color: corBtnMenuAppBarlogout),
+          ),
+        ),
+      ],
+    ),
+  )
+];
+//endregion
+
 class _HomeScreenState extends State<HomeScreen> {
+  Future<bool> finalizarVenda() async {
+    return await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'Local e Cliente da Venda',
+          style: TextStyle(color: Colors.black),
+        ),
+        backgroundColor: Colors.white,
+        content: SizedBox(
+          height: 100,
+          child: Column(
+            children: [
+              DropdownButtonFormField(
+                hint: const Text('Local'),
+                items: _setores.map((e) {
+                  return DropdownMenuItem(
+                    value: e,
+                    child: Text(e),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _setorFinal = value.toString();
+                  });
+                },
+              ),
+              DropdownButtonFormField(
+                hint: const Text('Cliente'),
+                items: _clientes.map((e) {
+                  return DropdownMenuItem(
+                    value: e,
+                    child: Text(e),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  _clienteFinal = value.toString();
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+              child: const Text("Voltar", style: TextStyle(color: Colors.grey)),
+              onPressed: () {
+                Navigator.pop(context, false);
+              }),
+          TextButton(
+              child: const Text("Finalizar",
+                  style: TextStyle(color: Colors.green)),
+              onPressed: () {
+                Navigator.pop(context, true);
+              })
+        ],
+      ),
+    );
+  }
+
   List<BoloModel> estoque = [];
   List<BoloModel> carrinho = [];
+  String _setorFinal = '';
+  String _clienteFinal = '';
+  late List<String> _clientes = [];
+  late List<String> _setores = [];
+
   @override
   Widget build(BuildContext context) {
+    const corTxtTile = Colors.pinkAccent;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Estoque'),
+        backgroundColor: Colors.pinkAccent,
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+        title: const Text('Controle de Vendas'),
+        actions: [
+          PopupMenuButton<int>(
+            onSelected: (item) => _onSelect(context, item),
+            itemBuilder: (context) => opcoesMenu,
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -25,20 +185,40 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
+                style: corBtn,
                 onPressed: () async {
                   estoque = await verCooler();
+                  estoque.sort((a, b) => a.sabor.compareTo(b.sabor));
+
+                  _setores = await buscarSetores();
+                  _setores.sort((a, b) => a.compareTo(b));
+
+                  _clientes = await buscarClientes();
+                  _clientes.sort((a, b) => a.compareTo(b));
+
                   setState(() {});
                 },
-                child: Text('Buscar Dados'),
+                child: const Text('Abrir Cooler'),
               ),
               carrinho.isEmpty
                   ? Container()
                   : ElevatedButton(
+                      style: corBtn,
                       onPressed: () async {
-                        await addVenda(carrinho);
-                        await updateEstoque(estoque);
-                        carrinho.clear();
-                        setState(() {});
+                        if (await finalizarVenda()) {
+                          if (_clienteFinal.isEmpty) {
+                            _clienteFinal = 'Cliente';
+                          }
+                          if (_setorFinal.isEmpty) {
+                            _setorFinal = 'Outros';
+                          }
+                          await addVenda(carrinho, _setorFinal, _clienteFinal);
+                          await updateEstoque(estoque);
+                          carrinho.clear();
+                          _clienteFinal = '';
+                          _setorFinal = '';
+                          setState(() {});
+                        }
                       },
                       child: const Text('Finalizar Venda'),
                     ),
@@ -52,8 +232,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       return ListTile(
                         title: Text(
                           estoque[index].sabor,
+                          style: const TextStyle(color: corTxtTile),
                         ),
-                        trailing: Text(estoque[index].qtd.toString()),
+                        trailing: Text(
+                          estoque[index].qtd.toString(),
+                          style: const TextStyle(color: corTxtTile),
+                        ),
                         onTap: () {
                           estoque[index].subtrair();
                           if (carrinho.isEmpty) {
@@ -90,12 +274,18 @@ class _HomeScreenState extends State<HomeScreen> {
               ? Container()
               : Expanded(
                   child: ListView.separated(
-                    itemBuilder: (context, index) {
-                      return ListTile(
+                  itemBuilder: (context, index) {
+                    return Container(
+                      decoration: BoxDecoration(color: Colors.black12),
+                      child: ListTile(
                         title: Text(
                           carrinho[index].sabor,
+                          style: TextStyle(color: Colors.black),
                         ),
-                        trailing: Text(carrinho[index].qtd.toString()),
+                        trailing: Text(
+                          carrinho[index].qtd.toString(),
+                          style: TextStyle(color: Colors.red),
+                        ),
                         onTap: () {
                           carrinho[index].subtrair();
                           for (var i = 0; i < estoque.length; i++) {
@@ -117,14 +307,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         textColor: carrinho[index].qtd > 0
                             ? Colors.blue
                             : Colors.black,
-                      );
-                    },
-                    itemCount: carrinho.length,
-                    separatorBuilder: (context, index) {
-                      return Divider();
-                    },
-                  ),
-                )
+                      ),
+                    );
+                  },
+                  itemCount: carrinho.length,
+                  separatorBuilder: (context, index) {
+                    return Divider();
+                  },
+                ))
         ],
       ),
 
