@@ -21,6 +21,7 @@ final corBtn = ElevatedButton.styleFrom(
   onPrimary: Colors.black,
 );
 //endregion
+const tamTextTile = 20.0;
 
 void _onSelect(BuildContext context, int item) {
   switch (item) {
@@ -97,6 +98,7 @@ final opcoesMenu = [
 
 class _GestaoScreenState extends State<GestaoScreen> {
   List<VendaModel> historicoVendas = [];
+  int totalBolosGeral = 0;
 
   Future<void> detalhesVenda(List<BoloModel> _pedido) async {
     List<BoloModel> pedidoLimpo = [];
@@ -177,11 +179,12 @@ class _GestaoScreenState extends State<GestaoScreen> {
                   style: corBtn,
                   onPressed: () async {
                     final data = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: DateTime(2017, 1),
-                        lastDate: DateTime(2030, 12),
-                        helpText: 'Escolha data desejada');
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(2017, 1),
+                      lastDate: DateTime(2030, 12),
+                      helpText: 'Escolha data desejada',
+                    );
                     historicoVendas = await buscarVendas(data!);
                     setState(() {});
                   },
@@ -207,32 +210,54 @@ class _GestaoScreenState extends State<GestaoScreen> {
               ? const Center(
                   child: Text(
                     'Nenhuma Venda nesta Data',
-                    style: TextStyle(fontSize: 20),
+                    style: TextStyle(fontSize: 22),
                   ),
                 )
               : Expanded(
                   child: ListView.separated(
                       itemBuilder: (context, index) {
-                        return ListTile(
-                          leading: Text(historicoVendas[index].setor),
-                          title:
-                              Center(child: Text(historicoVendas[index].hora)),
-                          trailing: Text(historicoVendas[index].cliente),
-                          onTap: () {
-                            //TODO: DESCOBRIR PQ ELE ESTA PEGANDO A VENDA DE TODOS E NÃO SÓ A DELE
-                            // historicoVendas[index].venda.forEach((element) {
-                            //   print(element.sabor);
-                            // });
-                            print(historicoVendas[index].venda.toList());
-                            detalhesVenda(historicoVendas[index].venda);
-                            // setState(() {});
-                          },
+                        var totalBolos = 0;
+                        for (var i = 0;
+                            i < historicoVendas[index].venda.length;
+                            i++) {
+                          totalBolos += historicoVendas[index].venda[i].qtd;
+                        }
+                        //TODO MOSTRAR TOTAIS DE BOLOS VENDIDOS
+                        // totalBolosGeral += totalBolos;
+                        // print(totalBolosGeral);
+
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+                          child: ListTile(
+                            textColor: Colors.red,
+                            leading: Text(
+                              historicoVendas[index].setor,
+                              style: const TextStyle(fontSize: tamTextTile),
+                            ),
+                            subtitle: Text(
+                              totalBolos.toString(),
+                              style: const TextStyle(fontSize: tamTextTile),
+                            ),
+                            title: Center(
+                                child: Text(
+                              historicoVendas[index].hora,
+                              style: const TextStyle(fontSize: tamTextTile),
+                            )),
+                            trailing: Text(
+                              historicoVendas[index].cliente,
+                              style: const TextStyle(fontSize: tamTextTile),
+                            ),
+                            onTap: () async {
+                              detalhesVenda(historicoVendas[index].venda);
+                            },
+                          ),
                         );
                       },
                       separatorBuilder: (context, index) {
                         return const Divider();
                       },
-                      itemCount: historicoVendas.length))
+                      itemCount: historicoVendas.length),
+                )
         ],
       ),
     );
