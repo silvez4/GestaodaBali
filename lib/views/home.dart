@@ -20,6 +20,10 @@ final corBtn = ElevatedButton.styleFrom(
   primary: Colors.pinkAccent,
   onPrimary: Colors.white,
 );
+final corBtnDisable = ElevatedButton.styleFrom(
+  primary: Colors.black38,
+  onPrimary: Colors.white,
+);
 //endregion
 
 void _onSelect(BuildContext context, int item) {
@@ -96,6 +100,32 @@ final opcoesMenu = [
 //endregion
 
 class _HomeScreenState extends State<HomeScreen> {
+  List<BoloModel> estoque = [];
+  List<BoloModel> carrinho = [];
+  String _setorFinal = '';
+  String _clienteFinal = '';
+  late List<String> _clientes = [];
+  late List<String> _setores = [];
+  static const double fontSize = 20.0;
+
+  @override
+  void initState() {
+    super.initState();
+    initCooler();
+  }
+
+  void initCooler() async {
+    estoque = await verCooler();
+    estoque.sort((a, b) => a.sabor.compareTo(b.sabor));
+
+    _setores = await buscarSetores();
+    _setores.sort((a, b) => a.compareTo(b));
+
+    _clientes = await buscarClientes();
+    _clientes.sort((a, b) => a.compareTo(b));
+    setState(() {});
+  }
+
   Future<bool> finalizarVenda() async {
     return await showDialog(
       context: context,
@@ -155,25 +185,51 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  List<BoloModel> estoque = [];
-  List<BoloModel> carrinho = [];
-  String _setorFinal = '';
-  String _clienteFinal = '';
-  late List<String> _clientes = [];
-  late List<String> _setores = [];
-
   @override
   Widget build(BuildContext context) {
     const corTxtTile = Colors.pinkAccent;
 
+    //region ScaffoldMesseger
+    ScaffoldFeatureController<SnackBar, SnackBarClosedReason> enviarMensagem(
+            BuildContext context, String texto) =>
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              texto,
+              style: const TextStyle(
+                color: Colors.pinkAccent,
+                fontSize: 20,
+              ),
+            ),
+            backgroundColor: Colors.black,
+          ),
+        );
+    //endregion
+
     return Scaffold(
+      backgroundColor: Colors.white70,
       appBar: AppBar(
         backgroundColor: Colors.pinkAccent,
-        centerTitle: true,
         automaticallyImplyLeading: false,
         title: const Text('Controle de Vendas'),
         actions: [
+          IconButton(
+            onPressed: () {
+              setState(() {
+                Navigator.of(context).pushNamed(AppRoutes.home);
+              });
+            },
+            icon: const Icon(
+              Icons.refresh,
+              size: 32,
+            ),
+          ),
           PopupMenuButton<int>(
+            icon: const Icon(
+              Icons.menu,
+              color: Colors.white,
+              size: 32,
+            ),
             onSelected: (item) => _onSelect(context, item),
             itemBuilder: (context) => opcoesMenu,
           ),
@@ -181,62 +237,49 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                style: corBtn,
-                onPressed: () async {
-                  estoque = await verCooler();
-                  estoque.sort((a, b) => a.sabor.compareTo(b.sabor));
-
-                  _setores = await buscarSetores();
-                  _setores.sort((a, b) => a.compareTo(b));
-
-                  _clientes = await buscarClientes();
-                  _clientes.sort((a, b) => a.compareTo(b));
-
-                  setState(() {});
-                },
-                child: const Text('Abrir Cooler'),
-              ),
-              carrinho.isEmpty
-                  ? Container()
-                  : ElevatedButton(
-                      style: corBtn,
-                      onPressed: () async {
-                        if (await finalizarVenda()) {
-                          if (_clienteFinal.isEmpty) {
-                            _clienteFinal = 'Cliente';
-                          }
-                          if (_setorFinal.isEmpty) {
-                            _setorFinal = 'Outros';
-                          }
-                          await addVenda(carrinho, _setorFinal, _clienteFinal);
-                          await updateEstoque(estoque);
-                          carrinho.clear();
-                          _clienteFinal = '';
-                          _setorFinal = '';
-                          setState(() {});
-                        }
-                      },
-                      child: const Text('Finalizar Venda'),
-                    ),
-            ],
-          ),
+          // Center(
+          //   child: ElevatedButton(
+          //     style: carrinho.isEmpty ? corBtnDisable : corBtn,
+          //     onPressed: () async {
+          //       if (carrinho.isEmpty) {
+          //         enviarMensagem(context, 'Insira Produtos Para Efetuar Venda');
+          //       } else {
+          //         if (await finalizarVenda()) {
+          //           if (_clienteFinal.isEmpty) {
+          //             _clienteFinal = 'Cliente';
+          //           }
+          //           if (_setorFinal.isEmpty) {
+          //             _setorFinal = 'Outros';
+          //           }
+          //           await addVenda(carrinho, _setorFinal, _clienteFinal);
+          //           updateEstoque(estoque);
+          //           carrinho.clear();
+          //           _clienteFinal = '';
+          //           _setorFinal = '';
+          //           setState(() {});
+          //           enviarMensagem(context, 'Venda Finalizada');
+          //         }
+          //       }
+          //     },
+          //     child: const Text('Finalizar Venda'),
+          //   ),
+          // ),
           estoque.isEmpty
-              ? Container()
+              ? const Center(
+                  child: Text('Nenhum Produto Para Venda'),
+                )
               : Expanded(
                   child: ListView.separated(
                     itemBuilder: (context, index) {
                       return ListTile(
+                        selectedTileColor: Colors.green,
                         title: Text(
                           estoque[index].sabor,
-                          style: const TextStyle(color: corTxtTile),
+                          style: const TextStyle(fontSize: fontSize),
                         ),
                         trailing: Text(
                           estoque[index].qtd.toString(),
-                          style: const TextStyle(color: corTxtTile),
+                          style: const TextStyle(fontSize: fontSize),
                         ),
                         onTap: () {
                           estoque[index].subtrair();
@@ -257,16 +300,18 @@ class _HomeScreenState extends State<HomeScreen> {
                           }
                         },
                         enabled: estoque[index].qtd > 0 ? true : false,
-                        tileColor: estoque[index].qtd > 0
-                            ? Colors.white
-                            : Colors.redAccent.withOpacity(0.6),
+                        tileColor:
+                            estoque[index].qtd > 0 ? Colors.white : Colors.red,
                         textColor:
-                            estoque[index].qtd > 0 ? Colors.blue : Colors.black,
+                            estoque[index].qtd > 0 ? corTxtTile : Colors.black,
                       );
                     },
                     itemCount: estoque.length,
                     separatorBuilder: (context, index) {
-                      return Divider();
+                      return const Divider(
+                        thickness: 2,
+                        color: Colors.pinkAccent,
+                      );
                     },
                   ),
                 ),
@@ -274,85 +319,200 @@ class _HomeScreenState extends State<HomeScreen> {
               ? Container()
               : Expanded(
                   child: ListView.separated(
-                  itemBuilder: (context, index) {
-                    return Container(
-                      decoration: BoxDecoration(color: Colors.black12),
-                      child: ListTile(
-                        title: Text(
-                          carrinho[index].sabor,
-                          style: TextStyle(color: Colors.black),
-                        ),
-                        trailing: Text(
-                          carrinho[index].qtd.toString(),
-                          style: TextStyle(color: Colors.red),
-                        ),
-                        onTap: () {
-                          carrinho[index].subtrair();
-                          for (var i = 0; i < estoque.length; i++) {
-                            if (carrinho[index].sabor == estoque[i].sabor) {
-                              estoque[i].qtd++;
-                              setState(() {});
-                              return;
-                            } else if (i == estoque.length - 1) {
-                              carrinho.add(BoloModel(estoque[index].sabor, 1));
+                    itemBuilder: (context, index) {
+                      return Container(
+                        decoration: BoxDecoration(
+                            color: Colors.black12,
+                            border: Border.all(color: Colors.black, width: 2)),
+                        child: ListTile(
+                          title: Text(
+                            carrinho[index].sabor,
+                            style: const TextStyle(
+                                color: Colors.black, fontSize: fontSize),
+                          ),
+                          trailing: Text(
+                            carrinho[index].qtd.toString(),
+                            style: const TextStyle(
+                                color: Colors.black, fontSize: fontSize),
+                          ),
+                          onTap: () {
+                            carrinho[index].subtrair();
+                            for (var i = 0; i < estoque.length; i++) {
+                              if (carrinho[index].sabor == estoque[i].sabor) {
+                                estoque[i].qtd++;
+                                setState(() {});
+                                break;
+                              } else if (i == estoque.length - 1) {
+                                carrinho
+                                    .add(BoloModel(estoque[index].sabor, 1));
+                              }
                             }
-                          }
-                          if (carrinho[index].qtd <= 0) {}
-                          setState(() {});
-                        },
-                        enabled: carrinho[index].qtd > 0 ? true : false,
-                        tileColor: carrinho[index].qtd > 0
-                            ? Colors.white
-                            : Colors.redAccent.withOpacity(0.6),
-                        textColor: carrinho[index].qtd > 0
-                            ? Colors.blue
-                            : Colors.black,
-                      ),
-                    );
-                  },
-                  itemCount: carrinho.length,
-                  separatorBuilder: (context, index) {
-                    return Divider();
-                  },
-                ))
+                            if (carrinho[index].qtd <= 0) {
+                              carrinho.removeAt(index);
+                            }
+                            setState(() {});
+                          },
+                          enabled: carrinho[index].qtd > 0 ? true : false,
+                          tileColor: carrinho[index].qtd > 0
+                              ? Colors.white
+                              : Colors.redAccent.withOpacity(0.6),
+                          textColor: carrinho[index].qtd > 0
+                              ? Colors.blue
+                              : Colors.black,
+                        ),
+                      );
+                    },
+                    itemCount: carrinho.length,
+                    separatorBuilder: (context, index) {
+                      return Divider();
+                    },
+                  ),
+                ),
+          Center(
+            child: ElevatedButton(
+              style: carrinho.isEmpty ? corBtnDisable : corBtn,
+              // style: ButtonStyle(
+              //   shape: MaterialStateProperty.all(
+              //     RoundedRectangleBorder(
+              //         borderRadius: BorderRadius.circular(32),
+              //         side: BorderSide(
+              //           color: Colors.red,
+              //         )),
+              //   ),
+              // ),
+              onPressed: () async {
+                if (carrinho.isEmpty) {
+                  enviarMensagem(context, 'Insira Produtos Para Efetuar Venda');
+                } else {
+                  if (await finalizarVenda()) {
+                    if (_clienteFinal.isEmpty) {
+                      _clienteFinal = 'Cliente';
+                    }
+                    if (_setorFinal.isEmpty) {
+                      _setorFinal = 'Outros';
+                    }
+                    await addVenda(carrinho, _setorFinal, _clienteFinal);
+                    updateEstoque(estoque);
+                    carrinho.clear();
+                    _clienteFinal = '';
+                    _setorFinal = '';
+                    setState(() {});
+                    enviarMensagem(context, 'Venda Finalizada');
+                  }
+                }
+              },
+              child: const Text(
+                'Finalizar Venda',
+                style: TextStyle(fontSize: fontSize),
+              ),
+            ),
+          ),
         ],
       ),
-
-      // body: FutureBuilder(
-      //     future: verCooler(),
-      //     builder:
-      //         (BuildContext context, AsyncSnapshot<List<BoloModel>> snapshot) {
-      //       if (snapshot.connectionState == ConnectionState.done) {
-      //         for (var element in snapshot.data!) {
-      //           estoque.add(element);
-      //         }
-      //         return ListView.separated(
-      //           itemBuilder: (context, index) {
-      //             return ListTile(
-      //               title: Text(
-      //                 estoque[index].sabor,
-      //                 style: TextStyle(color: Colors.red),
-      //               ),
-      //               trailing: Text(estoque[index].qtd.toString()),
-      //               onTap: () {
-      //                 print(index);
-      //                 textcolor:
-      //                 Colors.blueGrey;
-      //                 setState(() {
-      //                   reassemble();
-      //                 });
-      //               },
-      //             );
-      //           },
-      //           itemCount: estoque.length,
-      //           separatorBuilder: (context, index) {
-      //             return Divider();
-      //           },
-      //         );
-      //       } else {
-      //         return const CircularProgressIndicator();
-      //       }
-      //     }),
+      // ******** Dinamico
+      // body: Column(
+      //   children: [
+      //     SizedBox(
+      //       height: MediaQuery.of(context).size.height / 3,
+      //       child: FutureBuilder(
+      //           future: verCooler(),
+      //           builder: (BuildContext context,
+      //               AsyncSnapshot<List<BoloModel>> snapshot) {
+      //             if (snapshot.connectionState == ConnectionState.done) {
+      //               // for (var element in snapshot.data!) {
+      //               //   estoque.add(element);
+      //               // }
+      //               return ListView.separated(
+      //                 itemBuilder: (context, index) {
+      //                   //             estoque.sort((a, b) => a.sabor.compareTo(b.sabor));
+      //
+      //                   snapshot.data
+      //                       ?.sort((a, b) => a.sabor.compareTo(b.sabor));
+      //                   return ListTile(
+      //                     title: Text(
+      //                       snapshot.data![index].sabor,
+      //                       style: TextStyle(color: Colors.red),
+      //                     ),
+      //                     trailing: Text(snapshot.data![index].qtd.toString()),
+      //                     onTap: () {
+      //                       snapshot.data![index].subtrair();
+      //                       if (carrinho.isEmpty) {
+      //                         carrinho.add(
+      //                             BoloModel(snapshot.data![index].sabor, 1));
+      //                         setState(() {});
+      //                       } else {
+      //                         for (var i = 0; i < carrinho.length; i++) {
+      //                           if (carrinho[i].sabor ==
+      //                               snapshot.data![index].sabor) {
+      //                             carrinho[i].qtd++;
+      //                             setState(() {});
+      //                             return;
+      //                           }
+      //                         }
+      //                         carrinho.add(BoloModel(estoque[index].sabor, 1));
+      //                         if (estoque[index].qtd <= 1) {}
+      //                         setState(() {});
+      //                       }
+      //                     },
+      //                   );
+      //                 },
+      //                 itemCount: snapshot.data!.length,
+      //                 separatorBuilder: (context, index) {
+      //                   return Divider();
+      //                 },
+      //               );
+      //             } else {
+      //               return const CircularProgressIndicator();
+      //             }
+      //           }),
+      //     ),
+      //     carrinho.isEmpty
+      //         ? Container()
+      //         : Expanded(
+      //             child: ListView.separated(
+      //             itemBuilder: (context, index) {
+      //               return Container(
+      //                 decoration: BoxDecoration(color: Colors.black12),
+      //                 child: ListTile(
+      //                   title: Text(
+      //                     carrinho[index].sabor,
+      //                     style: TextStyle(color: Colors.black),
+      //                   ),
+      //                   trailing: Text(
+      //                     carrinho[index].qtd.toString(),
+      //                     style: TextStyle(color: Colors.red),
+      //                   ),
+      //                   onTap: () {
+      //                     carrinho[index].subtrair();
+      //                     for (var i = 0; i < estoque.length; i++) {
+      //                       if (carrinho[index].sabor == estoque[i].sabor) {
+      //                         estoque[i].qtd++;
+      //                         setState(() {});
+      //                         return;
+      //                       } else if (i == estoque.length - 1) {
+      //                         carrinho.add(BoloModel(estoque[index].sabor, 1));
+      //                       }
+      //                     }
+      //                     if (carrinho[index].qtd <= 0) {}
+      //                     setState(() {});
+      //                   },
+      //                   enabled: carrinho[index].qtd > 0 ? true : false,
+      //                   tileColor: carrinho[index].qtd > 0
+      //                       ? Colors.white
+      //                       : Colors.redAccent.withOpacity(0.6),
+      //                   textColor: carrinho[index].qtd > 0
+      //                       ? Colors.blue
+      //                       : Colors.black,
+      //                 ),
+      //               );
+      //             },
+      //             itemCount: carrinho.length,
+      //             separatorBuilder: (context, index) {
+      //               return Divider();
+      //             },
+      //           ))
+      //   ],
+      // ),
     );
   }
 }

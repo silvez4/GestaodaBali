@@ -28,6 +28,23 @@ class _AtualizarCoolerState extends State<AtualizarCooler> {
 
   @override
   Widget build(BuildContext context) {
+    //region ScaffoldMesseger
+    ScaffoldFeatureController<SnackBar, SnackBarClosedReason> enviarMensagem(
+            BuildContext context, String texto) =>
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              texto,
+              style: const TextStyle(
+                color: Colors.pinkAccent,
+                fontSize: 20,
+              ),
+            ),
+            backgroundColor: Colors.black,
+          ),
+        );
+    //endregion
+
     BoloModel novoBolo = BoloModel('', 0);
 
     Future<BoloModel> addBolo() async {
@@ -39,7 +56,7 @@ class _AtualizarCoolerState extends State<AtualizarCooler> {
       return await showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('Adicionar Novo Item'),
+          title: const Text('Adicionar Novo Item'),
           content: SizedBox(
             height: 100,
             child: Column(
@@ -89,7 +106,7 @@ class _AtualizarCoolerState extends State<AtualizarCooler> {
       return await showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('Modificar Quantidade'),
+          title: const Text('Modificar Quantidade'),
           content: TextField(
             controller: _qtdNova,
             keyboardType: TextInputType.number,
@@ -129,28 +146,23 @@ class _AtualizarCoolerState extends State<AtualizarCooler> {
         backgroundColor: Colors.pinkAccent,
         title: const Text('Atualizar Cooler'),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: ElevatedButton(
-              style: corBtnAppBar,
-              onPressed: () async {
-                bolos.add(await addBolo());
-                setState(() {});
-              },
-              child: const Icon(
-                Icons.add,
-                color: Colors.black,
-                size: tamanhoBtn,
-              ),
+          IconButton(
+            onPressed: () async {
+              bolos.add(await addBolo());
+              setState(() {});
+            },
+            icon: const Icon(
+              Icons.add,
+              color: Colors.black,
+              size: tamanhoBtn,
             ),
           ),
-          ElevatedButton(
-            style: corBtnAppBar,
+          IconButton(
             onPressed: () async {
               await updateCooler(bolos);
               Navigator.of(context).pop();
             },
-            child: const Icon(
+            icon: const Icon(
               Icons.check,
               color: Colors.green,
               size: tamanhoBtn,

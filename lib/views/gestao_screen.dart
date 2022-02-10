@@ -151,115 +151,125 @@ class _GestaoScreenState extends State<GestaoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const corTxt = Colors.black;
+    const corBorda = Colors.black45;
     return Scaffold(
       appBar: AppBar(
         elevation: 12,
         backgroundColor: Colors.greenAccent,
-        centerTitle: true,
         automaticallyImplyLeading: false,
         title: const Text(
           'Gestão',
           style: TextStyle(color: corBtnText),
         ),
         actions: [
+          IconButton(
+            onPressed: () async {
+              final data = await showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: DateTime(2017, 1),
+                lastDate: DateTime(2030, 12),
+                helpText: 'Escolha data desejada',
+              );
+              historicoVendas = await buscarVendas(data!);
+              setState(() {});
+            },
+            icon: const Icon(
+              Icons.date_range,
+              color: Colors.black,
+              size: 32,
+            ),
+          ),
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).pushNamed(AppRoutes.attcarrinho);
+            },
+            icon: const Icon(
+              Icons.mode_edit,
+              color: Colors.black,
+              size: 32,
+            ),
+          ),
           PopupMenuButton<int>(
+            icon: const Icon(
+              Icons.menu,
+              color: Colors.black,
+              size: 32,
+            ),
             onSelected: (item) => _onSelect(context, item),
             itemBuilder: (context) => opcoesMenu,
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  style: corBtn,
-                  onPressed: () async {
-                    final data = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime(2017, 1),
-                      lastDate: DateTime(2030, 12),
-                      helpText: 'Escolha data desejada',
-                    );
-                    historicoVendas = await buscarVendas(data!);
-                    setState(() {});
-                  },
-                  child: const Text(
-                    'Historico de Vendas',
-                    style: TextStyle(color: corBtnText),
+      body: historicoVendas.isEmpty
+          ? const Center(
+              child: Text(
+                'Nenhuma Venda nesta Data',
+                style: TextStyle(fontSize: 22),
+              ),
+            )
+          : Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Column(
+                children: [
+                  Text(
+                    'Total de Vendas: ' + totalBolosGeral.toString(),
+                    style: const TextStyle(fontSize: tamTextTile),
                   ),
-                ),
-                ElevatedButton(
-                  style: corBtn,
-                  onPressed: () {
-                    Navigator.of(context).pushNamed(AppRoutes.attcarrinho);
-                  },
-                  child: const Text(
-                    'Atualizar Cooler',
-                    style: TextStyle(color: corBtnText),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          historicoVendas.isEmpty
-              ? const Center(
-                  child: Text(
-                    'Nenhuma Venda nesta Data',
-                    style: TextStyle(fontSize: 22),
-                  ),
-                )
-              : Expanded(
-                  child: ListView.separated(
-                      itemBuilder: (context, index) {
-                        var totalBolos = 0;
-                        for (var i = 0;
-                            i < historicoVendas[index].venda.length;
-                            i++) {
-                          totalBolos += historicoVendas[index].venda[i].qtd;
-                        }
-                        //TODO MOSTRAR TOTAIS DE BOLOS VENDIDOS
-                        // totalBolosGeral += totalBolos;
-                        // print(totalBolosGeral);
+                  Expanded(
+                    child: ListView.builder(
+                        itemBuilder: (context, index) {
+                          var totalBolos = 0;
+                          if (index == 0) {
+                            totalBolosGeral = 0;
+                          }
+                          for (var i = 0;
+                              i < historicoVendas[index].venda.length;
+                              i++) {
+                            totalBolos += historicoVendas[index].venda[i].qtd;
+                          }
+                          //TODO MOSTRAR TOTAIS DE BOLOS VENDIDOS
+                          totalBolosGeral += totalBolos;
+                          // print(totalBolosGeral);
 
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                          child: ListTile(
-                            textColor: Colors.red,
-                            leading: Text(
-                              historicoVendas[index].setor,
-                              style: const TextStyle(fontSize: tamTextTile),
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                  border:
+                                      Border.all(color: corBorda, width: 2)),
+                              child: ListTile(
+                                textColor: corTxt,
+                                leading: Text(
+                                  historicoVendas[index].setor,
+                                  style: const TextStyle(fontSize: tamTextTile),
+                                ),
+                                subtitle: Text(
+                                  totalBolos.toString(),
+                                  style: const TextStyle(fontSize: tamTextTile),
+                                ),
+                                title: Center(
+                                    child: Text(
+                                  historicoVendas[index].hora,
+                                  style: const TextStyle(fontSize: tamTextTile),
+                                )),
+                                trailing: Text(
+                                  historicoVendas[index].cliente,
+                                  style: const TextStyle(fontSize: tamTextTile),
+                                ),
+                                onTap: () async {
+                                  detalhesVenda(historicoVendas[index].venda);
+                                },
+                              ),
                             ),
-                            subtitle: Text(
-                              totalBolos.toString(),
-                              style: const TextStyle(fontSize: tamTextTile),
-                            ),
-                            title: Center(
-                                child: Text(
-                              historicoVendas[index].hora,
-                              style: const TextStyle(fontSize: tamTextTile),
-                            )),
-                            trailing: Text(
-                              historicoVendas[index].cliente,
-                              style: const TextStyle(fontSize: tamTextTile),
-                            ),
-                            onTap: () async {
-                              detalhesVenda(historicoVendas[index].venda);
-                            },
-                          ),
-                        );
-                      },
-                      separatorBuilder: (context, index) {
-                        return const Divider();
-                      },
-                      itemCount: historicoVendas.length),
-                )
-        ],
-      ),
+                          );
+                        },
+                        itemCount: historicoVendas.length),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 }
