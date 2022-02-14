@@ -53,10 +53,10 @@ Future<void> updateCooler(List<BoloModel> bolos) async {
         .collection(uid!)
         .doc('cooler');
 
-    cooler.set({bolos.first.sabor: bolos.first.qtd});
-    bolos.forEach((element) {
+    await cooler.set({bolos.first.sabor: bolos.first.qtd});
+    bolos.forEach((element) async {
       if (element.qtd > 0) {
-        cooler.update({element.sabor: element.qtd});
+        await cooler.update({element.sabor: element.qtd});
       }
     });
     return;
@@ -86,7 +86,7 @@ Future<void> addVenda(
 
   final venda = FirebaseFirestore.instance.collection('vendas').doc(time);
 
-  venda
+  await venda
       .set({'vendedor': uid, 'local': local, 'cliente': cliente, 'hora': hora});
   // await venda.set({'data': time});
   pedido.forEach((element) async {
@@ -169,8 +169,10 @@ Future<void> updateEstoque(List<BoloModel> remessa) async {
       .collection(uid!)
       .doc('cooler');
 
-  remessa.forEach((element) {
-    cooler.update({element.sabor: element.qtd});
+  remessa.forEach((element) async {
+    if (element.qtd > 0) {
+      await cooler.update({element.sabor: element.qtd});
+    }
   });
 }
 

@@ -213,9 +213,20 @@ class _GestaoScreenState extends State<GestaoScreen> {
               padding: const EdgeInsets.only(top: 8.0),
               child: Column(
                 children: [
-                  Text(
-                    'Total de Vendas: ' + totalBolosGeral.toString(),
-                    style: const TextStyle(fontSize: tamTextTile),
+                  Row(
+                    children: [
+                      IconButton(
+                          onPressed: () {
+                            setState(() {
+                              totalBolosGeral;
+                            });
+                          },
+                          icon: Icon(Icons.update)),
+                      Text(
+                        'Total de Vendas: ' + totalBolosGeral.toString(),
+                        style: const TextStyle(fontSize: tamTextTile),
+                      ),
+                    ],
                   ),
                   Expanded(
                     child: ListView.builder(
