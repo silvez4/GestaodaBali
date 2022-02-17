@@ -15,11 +15,14 @@ class HomeScreen extends StatefulWidget {
 
 //region Cores
 const corBtnMenuAppBar = Colors.black;
+
 const corBtnMenuAppBarlogout = Colors.red;
+
 final corBtn = ElevatedButton.styleFrom(
   primary: Colors.pinkAccent,
   onPrimary: Colors.white,
 );
+
 final corBtnDisable = ElevatedButton.styleFrom(
   primary: Colors.black38,
   onPrimary: Colors.white,
@@ -58,6 +61,7 @@ final opcoesMenu = [
           padding: EdgeInsets.only(left: 8.0),
           child: Text(
             'Vender',
+            style: TextStyle(fontSize: 20),
           ),
         ),
       ],
@@ -73,7 +77,10 @@ final opcoesMenu = [
         ),
         Padding(
           padding: EdgeInsets.only(left: 8.0),
-          child: Text('Gestão'),
+          child: Text(
+            'Gestão',
+            style: TextStyle(fontSize: 20),
+          ),
         ),
       ],
     ),
@@ -90,7 +97,7 @@ final opcoesMenu = [
           padding: EdgeInsets.only(left: 8.0),
           child: Text(
             'Sair',
-            style: TextStyle(color: corBtnMenuAppBarlogout),
+            style: TextStyle(fontSize: 20, color: corBtnMenuAppBarlogout),
           ),
         ),
       ],
@@ -392,7 +399,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       _setorFinal = 'Outros';
                     }
                     await addVenda(carrinho, _setorFinal, _clienteFinal);
-                    updateEstoque(estoque);
+                    updateCooler(estoque);
                     carrinho.clear();
                     _clienteFinal = '';
                     _setorFinal = '';

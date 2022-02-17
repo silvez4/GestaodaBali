@@ -55,6 +55,7 @@ final opcoesMenu = [
           padding: EdgeInsets.only(left: 8.0),
           child: Text(
             'Vender',
+            style: TextStyle(fontSize: 20),
           ),
         ),
       ],
@@ -70,7 +71,10 @@ final opcoesMenu = [
         ),
         Padding(
           padding: EdgeInsets.only(left: 8.0),
-          child: Text('Gestão'),
+          child: Text(
+            'Gestão',
+            style: TextStyle(fontSize: 20),
+          ),
         ),
       ],
     ),
@@ -87,7 +91,7 @@ final opcoesMenu = [
           padding: EdgeInsets.only(left: 8.0),
           child: Text(
             'Sair',
-            style: TextStyle(color: corBtnMenuAppBarlogout),
+            style: TextStyle(fontSize: 20, color: corBtnMenuAppBarlogout),
           ),
         ),
       ],
