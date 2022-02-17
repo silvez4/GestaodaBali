@@ -276,50 +276,66 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Text('Nenhum Produto Para Venda'),
                 )
               : Expanded(
-                  child: ListView.separated(
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        selectedTileColor: Colors.green,
-                        title: Text(
-                          estoque[index].sabor,
-                          style: const TextStyle(fontSize: fontSize),
-                        ),
-                        trailing: Text(
-                          estoque[index].qtd.toString(),
-                          style: const TextStyle(fontSize: fontSize),
-                        ),
-                        onTap: () {
-                          estoque[index].subtrair();
-                          if (carrinho.isEmpty) {
-                            carrinho.add(BoloModel(estoque[index].sabor, 1));
-                            setState(() {});
-                          } else {
-                            for (var i = 0; i < carrinho.length; i++) {
-                              if (carrinho[i].sabor == estoque[index].sabor) {
-                                carrinho[i].qtd++;
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ListView.separated(
+                      itemBuilder: (context, index) {
+                        return Card(
+                          shadowColor: Colors.pink,
+                          elevation: 8,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(200)),
+                          ),
+                          child: ListTile(
+                            selectedTileColor: Colors.green,
+                            title: Text(
+                              estoque[index].sabor,
+                              style: const TextStyle(fontSize: fontSize),
+                            ),
+                            trailing: Text(
+                              estoque[index].qtd.toString(),
+                              style: const TextStyle(fontSize: fontSize),
+                            ),
+                            onTap: () {
+                              estoque[index].subtrair();
+                              if (carrinho.isEmpty) {
+                                carrinho
+                                    .add(BoloModel(estoque[index].sabor, 1));
                                 setState(() {});
-                                return;
+                              } else {
+                                for (var i = 0; i < carrinho.length; i++) {
+                                  if (carrinho[i].sabor ==
+                                      estoque[index].sabor) {
+                                    carrinho[i].qtd++;
+                                    setState(() {});
+                                    return;
+                                  }
+                                }
+                                carrinho
+                                    .add(BoloModel(estoque[index].sabor, 1));
+                                if (estoque[index].qtd <= 1) {}
+                                setState(() {});
                               }
-                            }
-                            carrinho.add(BoloModel(estoque[index].sabor, 1));
-                            if (estoque[index].qtd <= 1) {}
-                            setState(() {});
-                          }
-                        },
-                        enabled: estoque[index].qtd > 0 ? true : false,
-                        tileColor:
-                            estoque[index].qtd > 0 ? Colors.white : Colors.red,
-                        textColor:
-                            estoque[index].qtd > 0 ? corTxtTile : Colors.black,
-                      );
-                    },
-                    itemCount: estoque.length,
-                    separatorBuilder: (context, index) {
-                      return const Divider(
-                        thickness: 2,
-                        color: Colors.pinkAccent,
-                      );
-                    },
+                            },
+                            enabled: estoque[index].qtd > 0 ? true : false,
+                            tileColor: estoque[index].qtd > 0
+                                ? Colors.white
+                                : Colors.red,
+                            textColor: estoque[index].qtd > 0
+                                ? corTxtTile
+                                : Colors.black,
+                          ),
+                        );
+                      },
+                      itemCount: estoque.length,
+                      separatorBuilder: (context, index) {
+                        return const Divider(
+                          thickness: 2,
+                          color: Colors.pinkAccent,
+                        );
+                      },
+                    ),
                   ),
                 ),
           carrinho.isEmpty

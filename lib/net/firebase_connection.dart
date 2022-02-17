@@ -45,6 +45,7 @@ Future<List<BoloModel>> verCooler() async {
 Future<void> updateCooler(List<BoloModel> bolos) async {
   FirebaseAuth auth = FirebaseAuth.instance;
   String? uid = auth.currentUser!.email;
+  bool primeiroSet = false;
 
   if (bolos.isNotEmpty) {
     final cooler = await FirebaseFirestore.instance
@@ -55,6 +56,10 @@ Future<void> updateCooler(List<BoloModel> bolos) async {
 
     await cooler.set({bolos.first.sabor: bolos.first.qtd});
     bolos.forEach((element) async {
+      // if (element.qtd > 0 && !primeiroSet) {
+      //   await cooler.set({bolos.first.sabor: bolos.first.qtd});
+      //   primeiroSet = true;
+      // } else
       if (element.qtd > 0) {
         await cooler.update({element.sabor: element.qtd});
       }
@@ -84,7 +89,7 @@ Future<void> addVenda(
   //     .collection(mes)
   //     .doc(time);
 
-  final venda = FirebaseFirestore.instance.collection('vendas').doc(time);
+  final venda = await FirebaseFirestore.instance.collection('vendas').doc(time);
 
   await venda
       .set({'vendedor': uid, 'local': local, 'cliente': cliente, 'hora': hora});
@@ -143,38 +148,38 @@ Future<List<VendaModel>> buscarVendas(DateTime data) async {
   return venda;
 }
 
-Future<void> updateEstoque(List<BoloModel> remessa) async {
-  FirebaseAuth auth = FirebaseAuth.instance;
-  String? uid = auth.currentUser!.email;
-
-  // Intl.defaultLocale = 'pt_BR';
-
-  // var now = new DateTime.now();
-  // var formatdata = new DateFormat('yyyy-MM-dd hh:mm');
-  // var data = formatdata.format(now);
-
-  // var now = new DateTime.now();
-  // var diaFormat = new DateFormat('dd');
-  // String dia = diaFormat.format(now);
-  // var time = (dia +
-  //     '-' +
-  //     now.hour.toString() +
-  //     ':' +
-  //     now.minute.toString() +
-  //     ':' +
-  //     now.second.toString());
-  final cooler = await FirebaseFirestore.instance
-      .collection('bolos')
-      .doc('vendedor')
-      .collection(uid!)
-      .doc('cooler');
-
-  remessa.forEach((element) async {
-    if (element.qtd > 0) {
-      await cooler.update({element.sabor: element.qtd});
-    }
-  });
-}
+// Future<void> updateEstoque(List<BoloModel> remessa) async {
+//   FirebaseAuth auth = FirebaseAuth.instance;
+//   String? uid = auth.currentUser!.email;
+//
+//   // Intl.defaultLocale = 'pt_BR';
+//
+//   // var now = new DateTime.now();
+//   // var formatdata = new DateFormat('yyyy-MM-dd hh:mm');
+//   // var data = formatdata.format(now);
+//
+//   // var now = new DateTime.now();
+//   // var diaFormat = new DateFormat('dd');
+//   // String dia = diaFormat.format(now);
+//   // var time = (dia +
+//   //     '-' +
+//   //     now.hour.toString() +
+//   //     ':' +
+//   //     now.minute.toString() +
+//   //     ':' +
+//   //     now.second.toString());
+//   final cooler = await FirebaseFirestore.instance
+//       .collection('bolos')
+//       .doc('vendedor')
+//       .collection(uid!)
+//       .doc('cooler');
+//
+//   remessa.forEach((element) async {
+//     if (element.qtd > 0) {
+//       await cooler.update({element.sabor: element.qtd});
+//     }
+//   });
+// }
 
 Future<List<String>> buscarSabores() async {
   List<String> sabores = [];
